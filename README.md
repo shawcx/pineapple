@@ -4,15 +4,22 @@ Board support and a build system for running upstream
 [OpenWrt](https://openwrt.org) 25.12 on the Hak5 **WiFi Pineapple Enterprise**
 (Qualcomm IPQ4019, OpenWrt target `ipq40xx/generic`).
 
-This is an unofficial project and is not affiliated with or supported by Hak5.
+> [!CAUTION]
+> **This is an unofficial port.** It is not made, endorsed or supported by
+> Hak5, and it is not part of OpenWrt.
+>
+> **Use it at your own risk.** It has been tested on a single unit. It may not
+> work on yours, and installing it can leave a unit unbootable, lose its radio
+> calibration, or void its warranty. It comes with no warranty and no support,
+> and the author is not responsible for any damage or loss from using it.
+
 It replaces the stock firmware with plain OpenWrt. It contains no Hak5 software,
 so PineAP and the stock web interface are not part of it.
 
-> [!WARNING]
-> Installing this needs a serial console and replaces the stock firmware. It has
-> been tested on one unit. Back up the flash first (see [Install](#install)),
-> and never write to the bootloader or `ART` partitions: `ART` holds the
-> radio calibration for that specific unit and cannot be regenerated.
+Installing it needs a serial console. Back up the flash first (see
+[Install](#install)), and never write to the bootloader or `ART` partitions:
+`ART` holds the radio calibration for that specific unit and cannot be
+regenerated.
 
 ## Status
 
@@ -161,3 +168,5 @@ Later upgrades are a plain `sysupgrade -n` from the running system.
 GPL-2.0-only, the same licence as OpenWrt. See [`LICENSE`](LICENSE). Files that
 carry their own SPDX header, such as the device tree, keep the licence stated
 there.
+
+As the licence says, this is provided "as is", without warranty of any kind.
