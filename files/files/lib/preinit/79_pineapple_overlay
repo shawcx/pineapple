@@ -1,0 +1,36 @@
+# Clear a stale eMMC root overlay before it is mounted.
+#
+# The eMMC overlay (label pine-overlay) survives a firmware flash. If it were
+# mounted over a different firmware build, its old files (package database,
+# configs, binaries) would shadow the new image. The overlay records the
+# squashfs UUID of the build it belongs to in .rom-id; when that differs from
+# the running build, drop upper/, work/ and etc/ (block's extroot state) and
+# keep everything else on the partition. Runs just before 80_mount_root.
+
+pineapple_overlay_check() {
+	local label=pine-overlay mnt=/tmp/overlay-check dev rom_id i
+
+	for i in 1 2 3 4 5; do
+		dev=$(block info 2>/dev/null | sed -n "s|^\(/dev/mmcblk[0-9a-z]*\):.* LABEL=\"$label\".*|\1|p" | head -n1)
+		[ -n "$dev" ] && break
+		[ -b /dev/mmcblk0 ] && [ "$i" -ge 2 ] && break
+		sleep 1
+	done
+	[ -n "$dev" ] || return 0
+
+	rom_id=$(block info 2>/dev/null | sed -n 's|^/dev/mtdblock[0-9]*: UUID="\([^"]*\)".* TYPE="squashfs".*|\1|p' | head -n1)
+	[ -n "$rom_id" ] || return 0
+
+	mkdir -p "$mnt"
+	mount -t ext4 "$dev" "$mnt" 2>/dev/null || return 0
+	if [ "$(cat "$mnt/.rom-id" 2>/dev/null)" != "$rom_id" ]; then
+		echo "- eMMC overlay is from another firmware build, clearing it -"
+		rm -rf "$mnt/upper" "$mnt/work" "$mnt/etc"
+		mkdir -p "$mnt/upper" "$mnt/work"
+		echo "$rom_id" > "$mnt/.rom-id"
+		sync
+	fi
+	umount "$mnt"
+}
+
+boot_hook_add preinit_main pineapple_overlay_check

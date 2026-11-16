@@ -1,0 +1,14 @@
+# Upstream OpenWrt tree (cloned by the Makefile / README steps)
+/openwrt/
+# Unpacked SDK / ImageBuilder
+/sdk/
+/imagebuilder/
+# Build artifacts and logs
+*.log
+/seed.config
+# Phase 0 recon output and device image backups (large / per-unit)
+/backups/
+/docs/stock-recon.out
+/docs/uboot.log
+# TFTP root for RAM-booting over U-Boot
+/tftp/

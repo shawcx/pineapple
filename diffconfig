@@ -1,0 +1,64 @@
+# Seed config for the WiFi Pineapple Enterprise (ipq40xx/generic).
+# `make defconfig` expands this; `make menuconfig` + `make savediff` rewrites it.
+CONFIG_TARGET_ipq40xx=y
+CONFIG_TARGET_ipq40xx_generic=y
+CONFIG_TARGET_ipq40xx_generic_DEVICE_hak5_wifi-pineapple-enterprise-1=y
+
+# Build an initramfs image too, for RAM-booting over UART (Phase 1, no flash).
+CONFIG_TARGET_ROOTFS_INITRAMFS=y
+
+# Web UI.
+CONFIG_PACKAGE_luci=y
+
+# Also emit the SDK and a standalone ImageBuilder from the same tree.
+CONFIG_SDK=y
+CONFIG_MAKE_TOOLCHAIN=y
+CONFIG_IB=y
+CONFIG_IB_STANDALONE=y
+
+# GPS daemon and chrony for timekeeping (chrony replaces busybox ntpd at runtime).
+CONFIG_PACKAGE_gpsd=y
+CONFIG_PACKAGE_chrony=y
+# The GPS puck is a u-blox 7 (1546:01a7), a USB CDC-ACM serial device: /dev/ttyACM0.
+CONFIG_PACKAGE_kmod-usb-acm=y
+
+# Tools and fleet basics: GPS clients, USB inspection, file sync, WireGuard, HTTPS LuCI.
+CONFIG_PACKAGE_gpsd-clients=y
+CONFIG_PACKAGE_usbutils=y
+CONFIG_PACKAGE_rsync=y
+CONFIG_PACKAGE_kmod-wireguard=y
+CONFIG_PACKAGE_wireguard-tools=y
+CONFIG_PACKAGE_luci-proto-wireguard=y
+CONFIG_PACKAGE_luci-ssl=y
+CONFIG_PACKAGE_kmod-usb-storage=y
+CONFIG_PACKAGE_tcpdump=y
+CONFIG_PACKAGE_kmod-fs-vfat=y
+CONFIG_PACKAGE_kmod-fs-exfat=y
+CONFIG_PACKAGE_htop=y
+CONFIG_PACKAGE_tmux=y
+CONFIG_PACKAGE_nano=y
+# CONFIG_PACKAGE_iw is not set
+CONFIG_PACKAGE_iw-full=y
+CONFIG_PACKAGE_ip-full=y
+CONFIG_PACKAGE_ethtool-full=y
+
+# Extra radio, tethering, VPN and admin tools.
+CONFIG_PACKAGE_kmod-mt7921u=y
+CONFIG_PACKAGE_kmod-usb-net-cdc-ether=y
+CONFIG_PACKAGE_kmod-usb-net-cdc-ncm=y
+CONFIG_PACKAGE_kmod-tun=y
+CONFIG_PACKAGE_openssh-sftp-server=y
+CONFIG_PACKAGE_curl=y
+CONFIG_PACKAGE_lsblk=y
+CONFIG_PACKAGE_fdisk=y
+CONFIG_PACKAGE_strace=y
+CONFIG_PACKAGE_lsof=y
+# USB serial adapters (other GPS pucks, consoles).
+CONFIG_PACKAGE_kmod-usb-serial-cp210x=y
+CONFIG_PACKAGE_kmod-usb-serial-ftdi=y
+CONFIG_PACKAGE_kmod-usb-serial-pl2303=y
+CONFIG_PACKAGE_kmod-usb-serial-ch341=y
+# JSON and capture handling.
+CONFIG_PACKAGE_jq=y
+CONFIG_PACKAGE_zstd=y
+CONFIG_PACKAGE_pv=y

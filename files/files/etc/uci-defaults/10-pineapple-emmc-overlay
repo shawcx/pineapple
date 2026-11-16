@@ -1,0 +1,46 @@
+#!/bin/sh
+# Put the root overlay on the eMMC (extroot).
+#
+# mmcblk0p2 (3.4 GB) is mounted as /overlay by /etc/config/fstab, matched by
+# label so that a partition still holding the Hak5 stock overlay is never used.
+# uci-defaults scripts run on the first boot after a flash, when the overlay is
+# on NOR again. This one then prepares the eMMC and reboots once:
+#
+#   - no label (factory unit): format it;
+#   - our label but not mounted (extroot failed): keep the partition, drop the
+#     old root overlay and keep everything else. The normal upgrade case, where
+#     extroot mounts an overlay left by an older build, is handled earlier by
+#     /lib/preinit/79_pineapple_overlay;
+#   - then copy the current NOR overlay across, which carries any settings that
+#     sysupgrade preserved.
+#
+# On the following boot the eMMC is the overlay and this script is a no-op.
+# Note: ext4 labels are limited to 16 characters.
+
+DEV=/dev/mmcblk0p2
+LABEL=pine-overlay
+MNT=/tmp/emmc-overlay
+log() { logger -t emmc-overlay "$*"; echo "emmc-overlay: $*" >/dev/kmsg 2>/dev/null; }
+
+[ -b "$DEV" ] || { log "no $DEV, keeping overlay on NOR"; exit 0; }
+grep -q "^$DEV /overlay " /proc/mounts && exit 0
+
+current=$(block info "$DEV" 2>/dev/null | sed -n 's/.* LABEL="\([^"]*\)".*/\1/p')
+if [ "$current" != "$LABEL" ]; then
+	log "formatting $DEV as $LABEL (was: ${current:-unlabelled})"
+	mkfs.ext4 -F -q -L "$LABEL" "$DEV" || { log "mkfs failed, keeping overlay on NOR"; exit 0; }
+fi
+
+mkdir -p "$MNT"
+mount -t ext4 "$DEV" "$MNT" || { log "cannot mount $DEV, keeping overlay on NOR"; exit 0; }
+rm -rf "$MNT/upper" "$MNT/work" "$MNT/etc/.extroot-uuid"
+mkdir -p "$MNT/upper" "$MNT/work"
+cp -a /overlay/upper/. "$MNT/upper/" || log "copying the NOR overlay failed"
+# Record which firmware build this overlay belongs to (see /lib/preinit/79_pineapple_overlay).
+block info 2>/dev/null | sed -n 's|^/dev/mtdblock[0-9]*: UUID="\([^"]*\)".* TYPE="squashfs".*|\1|p' | head -n1 > "$MNT/.rom-id"
+sync
+umount "$MNT"
+
+log "eMMC overlay prepared; rebooting once to switch to it"
+( sleep 30; sync; reboot ) &
+exit 0

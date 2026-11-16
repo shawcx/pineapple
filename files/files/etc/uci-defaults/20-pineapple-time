@@ -1,0 +1,12 @@
+#!/bin/sh
+# chrony keeps the clock (NTP, with GPS from gpsd as fallback), so turn off
+# busybox ntpd, which would otherwise fight it. The clock stays on UTC.
+uci -q batch <<EOT
+set system.ntp.enabled='0'
+set system.@system[0].timezone='UTC0'
+set system.@system[0].zonename='UTC'
+commit system
+EOT
+/etc/init.d/sysntpd disable 2>/dev/null
+/etc/init.d/sysntpd stop 2>/dev/null
+exit 0

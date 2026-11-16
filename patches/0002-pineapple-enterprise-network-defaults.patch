@@ -1,0 +1,24 @@
+diff --git a/target/linux/ipq40xx/base-files/etc/board.d/02_network b/target/linux/ipq40xx/base-files/etc/board.d/02_network
+index 525e4d8186..b8a9f8b955 100644
+--- a/target/linux/ipq40xx/base-files/etc/board.d/02_network
++++ b/target/linux/ipq40xx/base-files/etc/board.d/02_network
+@@ -13,6 +13,7 @@ ipq40xx_setup_interfaces()
+ 	case "$board" in
+ 	8dev,habanero-dvk|\
+ 	avm,fritzbox-4040|\
++	hak5,wifi-pineapple-enterprise-1|\
+ 	asus,rt-ac42u|\
+ 	asus,rt-ac58u|\
+ 	linksys,ea6350v3|\
+@@ -182,6 +183,11 @@ ipq40xx_setup_macs()
+ 	cilab,meshpoint-one)
+ 		label_mac=$(mtd_get_mac_binary "ART" 0x1006)
+ 		;;
++	hak5,wifi-pineapple-enterprise-1)
++		lan_mac=$(mtd_get_mac_binary "ART" 0x1006)
++		wan_mac=$(macaddr_add "$lan_mac" -1)
++		label_mac=$lan_mac
++		;;
+ 	asus,rt-ac42u)
+ 		label_mac=$(mtd_get_mac_binary_ubi Factory 0x1006)
+ 		;;

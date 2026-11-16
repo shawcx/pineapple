@@ -1,0 +1,17 @@
+# Root overlay on the eMMC (extroot). Matched by label so that a partition
+# still holding the Hak5 stock overlay is never mounted over our root; the
+# label is written by /etc/uci-defaults/10-pineapple-emmc-overlay.
+config global
+	option anon_swap '0'
+	option anon_mount '0'
+	option auto_swap '0'
+	option auto_mount '0'
+	option delay_root '5'
+	option check_fs '0'
+
+config mount
+	option target '/overlay'
+	option label 'pine-overlay'
+	option fstype 'ext4'
+	option options 'rw,noatime'
+	option enabled '1'
