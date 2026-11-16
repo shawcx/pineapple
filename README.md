@@ -155,3 +155,9 @@ Later upgrades are a plain `sysupgrade -n` from the running system.
 - [`docs/stock-pineapple-ent.dts`](docs/stock-pineapple-ent.dts): the device
   tree decompiled from stock firmware 2.1.3, which ours is derived from.
 - [`PLAN.md`](PLAN.md): the original plan, hardware notes and open questions.
+
+## Licence
+
+GPL-2.0-only, the same licence as OpenWrt. See [`LICENSE`](LICENSE). Files that
+carry their own SPDX header, such as the device tree, keep the licence stated
+there.
