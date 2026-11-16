@@ -10,6 +10,8 @@
 #   make menuconfig   edit the config, then save the minimal diff to ./diffconfig
 #   make example      build ./example out of tree with the SDK into an .apk
 #
+# Other projects can add their packages to the image through ./local.mk, see below.
+#
 # RAM-boot (Phase 1, no flash writes) uses the initramfs .itb from BIN_DIR.
 
 OPENWRT_URL     ?= https://git.openwrt.org/openwrt/openwrt.git
@@ -25,6 +27,20 @@ BIN_DIR := $(OPENWRT_DIR)/bin/targets/$(TARGET)/$(SUBTARGET)
 SDK_TAR  = $(firstword $(wildcard $(BIN_DIR)/openwrt-sdk-*.tar.zst))
 SDK_DIR := sdk
 SDK_PKGS = $(SDK_DIR)/bin/packages/$(shell sed -n 's/^CONFIG_TARGET_ARCH_PACKAGES="\(.*\)"/\1/p' $(SDK_DIR)/.config 2>/dev/null)/base
+
+# Local additions that are not part of this repo. ./local.mk (gitignored), if it
+# exists, is read here; typically it includes another project's makefile that
+# adds that project's packages to the image. It can set:
+#   INJECT_DEPS       targets to run after the feeds, before the board support goes in
+#   EXTRA_DIFFCONFIG  config fragments appended to ./diffconfig
+# and its recipes can use $(seed_config) to write the tree's .config.
+define seed_config
+cat diffconfig $(EXTRA_DIFFCONFIG) > $(OPENWRT_DIR)/.config
+$(MAKE) -C $(OPENWRT_DIR) defconfig
+endef
+
+.DEFAULT_GOAL := all
+-include local.mk
 
 .PHONY: all checkout feeds inject config download build menuconfig savediff sdk example example-clean clean distclean
 
@@ -43,7 +59,7 @@ feeds: checkout
 
 # Inject our board support into the clone. Idempotent: the overlay is a plain
 # copy, and each patch is skipped if it already applies in reverse (i.e. is in).
-inject: feeds
+inject: feeds $(INJECT_DEPS)
 	rsync -a files/ $(OPENWRT_DIR)/
 	@for p in $(sort $(wildcard patches/*.patch)); do \
 		if patch -d $(OPENWRT_DIR) -p1 -R --dry-run -s -f <"$$p" >/dev/null 2>&1; then \
@@ -55,8 +71,7 @@ inject: feeds
 	done
 
 config: inject
-	cp diffconfig $(OPENWRT_DIR)/.config
-	$(MAKE) -C $(OPENWRT_DIR) defconfig
+	$(seed_config)
 
 download: config
 	$(MAKE) -C $(OPENWRT_DIR) -j$(JOBS) download
@@ -70,8 +85,11 @@ menuconfig: config
 	$(MAKE) -C $(OPENWRT_DIR) menuconfig
 	$(MAKE) savediff
 
+# Lines that came from EXTRA_DIFFCONFIG stay out of ./diffconfig.
 savediff:
-	cd $(OPENWRT_DIR) && ./scripts/diffconfig.sh > $(CURDIR)/diffconfig
+	cd $(OPENWRT_DIR) && ./scripts/diffconfig.sh > $(CURDIR)/diffconfig.new
+	cat $(EXTRA_DIFFCONFIG) /dev/null | grep -v -x -F -f - diffconfig.new > diffconfig
+	rm diffconfig.new
 
 sdk: $(SDK_DIR)/.unpacked
 

@@ -12,3 +12,5 @@
 /docs/uboot.log
 # TFTP root for RAM-booting over U-Boot
 /tftp/
+# Local makefile additions (see Makefile)
+/local.mk
